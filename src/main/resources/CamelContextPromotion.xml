@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:cxf="http://camel.apache.org/schema/cxf"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd
+       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+       ">
+
+	<bean id="initializeVoucher" class="com.sellinall.lazada.init.InitializeVoucher" />
+	<bean id="initializeFreeShipping" class="com.sellinall.lazada.init.InitializeFreeShipping" />
+	<bean id="initGetVoucher" class="com.sellinall.lazada.init.InitGetVoucher" />
+	<bean id="initUpdateVoucherStatus" class="com.sellinall.lazada.init.InitUpdateVoucherStatus" />
+	<bean id="submitVoucherRequest" class="com.sellinall.lazada.requests.SubmitVoucherRequest" />
+	<bean id="processPromotionUpdateResponse" class="com.sellinall.lazada.response.ProcessPromotionUpdateResponse" />
+	<bean id="submitFreeShippingRequest" class="com.sellinall.lazada.requests.SubmitFreeShippingRequest" />
+	<bean id="getAvailableVoucherList" class="com.sellinall.lazada.requests.GetAvailableVoucherList" />
+	<bean id="upsertVoucherInDB" class="com.sellinall.lazada.requests.UpsertVoucherInDB" />
+
+	<bean id="submitUpdatePromotionStatusRequest"
+		class="com.sellinall.lazada.requests.SubmitUpdatePromotionStatusRequest" />
+	<bean id="updatePromotionStatusInDB" class="com.sellinall.lazada.requests.UpdatePromotionStatusInDB" />
+	<bean id="buildAddPromotionItemsRequest" class="com.sellinall.lazada.requests.BuildAddPromotionItemsRequest" />
+	<bean id="buildRemovePromotionItemsRequest" class="com.sellinall.lazada.requests.BuildRemovePromotionItemsRequest" />
+	<bean id="updatePromotionItemsInDB" class="com.sellinall.lazada.requests.UpdatePromotionItemsInDB" />
+
+	<bean id="getListOfVoucherProducts" class="com.sellinall.lazada.requests.GetListOfVoucherProducts" />
+	<bean id="processVoucherProductsForDb" class="com.sellinall.lazada.process.ProcessVoucherProductsForDb" />
+
+	<bean id="checkNextLoop" class="com.sellinall.lazada.process.CheckNextLoop" />
+	<bean id="updateVoucherImportStatus" class="com.sellinall.lazada.process.UpdateVoucherImportStatus" />
+	<bean id="initGetFreeShipping" class="com.sellinall.lazada.init.InitGetFreeShipping" />
+	<bean id="getAvailableFreeShippingList" class="com.sellinall.lazada.requests.GetAvailableFreeShippingList" />
+	<bean id="upsertFreeShippingInDB" class="com.sellinall.lazada.requests.UpsertFreeShippingInDB" />
+
+
+	<bean id="getListOfFreeShippingProducts" class="com.sellinall.lazada.requests.GetListOfFreeShippingProducts" />
+	<bean id="processFreeShippingProductsForDb" class="com.sellinall.lazada.process.ProcessFreeShippingProductsForDb" />
+
+	<bean id="updateFreeShippingImportStatus" class="com.sellinall.lazada.process.UpdateFreeShippingImportStatus" />
+	<routeContext id="promotionRoute" xmlns="http://camel.apache.org/schema/spring">
+
+		<route id="initProcessFreeShipping">
+			<from uri="direct:initProcessFreeShipping" />
+			<choice>
+				<when>
+					<simple>${exchangeProperty.action} == 'createPromotion'</simple>
+					<to uri="direct:createFreeShipping" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.action} == 'updatePromotion'</simple>
+					<to uri="direct:updateFreeShipping" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.action} == 'importPromotion'</simple>
+					<to uri="direct:importFreeShipping" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.action} == 'updatePromotionStatus'</simple>
+					<to uri="direct:updatePromotionStatus" />
+				</when>
+			</choice>
+		</route>
+
+		<route id="importFreeShipping">
+			<from uri="direct:importFreeShipping" />
+			<process ref="initGetFreeShipping" />
+			<process ref="loadUserDataByNicknameId" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+				<when>
+					<simple>${exchangeProperty.stopProcess} == true</simple>
+					<stop />
+				</when>
+			</when>
+			<setProperty propertyName="isFreeShippingImportProcessing">
+				<simple>true</simple>
+			</setProperty>
+			<process ref="updateFreeShippingImportStatus" />
+			<doTry>
+				<loop doWhile="true">
+					<simple>${exchangeProperty.isLastPage} == false</simple>
+					<process ref="getAvailableFreeShippingList" />
+					<split parallelProcessing="false">
+						<simple>${body}</simple>
+						<process ref="getListOfFreeShippingProducts" />
+						<process ref="processFreeShippingProductsForDb" />
+						<process ref="upsertFreeShippingInDB" />
+					</split>
+					<process ref="checkNextLoop" />
+				</loop>
+				<doCatch>
+					<exception>java.lang.Exception</exception>
+					<setProperty propertyName="failureReason">
+						<simple>'unable to import'</simple>
+					</setProperty>
+					<process ref="handleException" />
+				</doCatch>
+			</doTry>
+			<setProperty propertyName="isFreeShippingImportProcessing">
+				<simple>false</simple>
+			</setProperty>
+			<process ref="updateFreeShippingImportStatus" />
+		</route>
+		<route id="initProcessVoucher">
+			<from uri="direct:initProcessVoucher" />
+			<choice>
+				<when>
+					<simple>${exchangeProperty.action} == 'createPromotion'</simple>
+					<to uri="direct:createVoucher" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.action} == 'importPromotion'</simple>
+					<to uri="direct:importVoucher" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.action} == 'updatePromotionStatus'</simple>
+					<to uri="direct:updatePromotionStatus" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.action} == 'updatePromotion'</simple>
+					<to uri="direct:updateVoucher" />
+				</when>
+			</choice>
+		</route>
+		<route id="createFreeShipping">
+			<from uri="direct:createFreeShipping" />
+			<process ref="initializeFreeShipping" />
+			<process ref="loadUserDataByNicknameId" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+			</when>
+			<process ref="submitFreeShippingRequest" />
+			<when>
+				<simple>${exchangeProperty.isAddPromotionItem} == true </simple>
+				<to uri="direct:addItemInPromotion" />
+			</when>
+			<process ref="updatePromotionItemsInDB" />
+			<to uri="direct:invokePromotionMgmtAPI" />
+			<process ref="processPromotionUpdateResponse" />
+		</route>
+
+		<route id="updateFreeShipping">
+			<from uri="direct:updateFreeShipping" />
+			<process ref="initializeFreeShipping" />
+			<process ref="loadUserDataByNicknameId" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+			</when>
+			<when>
+				<simple>${exchangeProperty.isEligibleToUpdateFreeShipping} == 'true'</simple>
+				<process ref="submitFreeShippingRequest" />
+			</when>
+			<when>
+				<simple>${exchangeProperty.isEligibleToUpdateFreeShipping} == false || ${exchangeProperty.isPromotionCreated} == true
+				</simple>
+				<when>
+					<simple>${exchangeProperty.isAddPromotionItem} == true </simple>
+					<to uri="direct:addItemInPromotion" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.isRemovePromotionItem} == true </simple>
+					<to uri="direct:removeItemFromPromotion" />
+				</when>
+			</when>
+			<process ref="updatePromotionItemsInDB" />
+			<to uri="direct:invokePromotionMgmtAPI" />
+			<process ref="processPromotionUpdateResponse" />
+		</route>
+
+		<route id="createVoucher">
+			<from uri="direct:createVoucher" />
+			<process ref="initializeVoucher" />
+			<process ref="loadUserDataByNicknameId" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+			</when>
+			<process ref="submitVoucherRequest" />
+			<when>
+				<simple>${exchangeProperty.isAddPromotionItem} == true </simple>
+				<to uri="direct:addItemInPromotion" />
+			</when>
+			<process ref="updatePromotionItemsInDB" />
+			<to uri="direct:invokePromotionMgmtAPI" />
+			<process ref="processPromotionUpdateResponse" />
+		</route>
+
+		<route id="addItemInPromotion">
+			<from uri="direct:addItemInPromotion" />
+			<setProperty propertyName="isAddPromotionItemFlow">
+				<simple>true</simple>
+			</setProperty>
+			<when>
+				<simple>${exchangeProperty.needToLoadInventory} == true</simple>
+				<setProperty propertyName="listOfSKUS">
+					<simple>${exchangeProperty.addedPromotionItems}</simple>
+				</setProperty>
+				<process ref="loadInventoryBySKUs" />
+			</when>
+			<when>
+				<simple>${exchangeProperty.promotionID} != null</simple>
+				<process ref="buildAddPromotionItemsRequest" />
+			</when>
+		</route>
+
+		<route id="removeItemFromPromotion">
+			<from uri="direct:removeItemFromPromotion" />
+			<setProperty propertyName="isRemovePromotionItemFlow">
+				<simple>true</simple>
+			</setProperty>
+			<when>
+				<simple>${exchangeProperty.needToLoadInventory} == true</simple>
+				<setProperty propertyName="listOfSKUS">
+					<simple>${exchangeProperty.removedPromotionItems}</simple>
+				</setProperty>
+				<process ref="loadInventoryBySKUs" />
+			</when>
+			<when>
+				<simple>${exchangeProperty.promotionID} != null</simple>
+				<process ref="buildRemovePromotionItemsRequest" />
+			</when>
+		</route>
+
+		<route id="importVoucher">
+			<from uri="direct:importVoucher" />
+			<process ref="initGetVoucher" />
+			<process ref="loadUserDataByNicknameId" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+				<when>
+					<simple>${exchangeProperty.stopProcess} == true</simple>
+					<stop />
+				</when>
+			</when>
+			<setProperty propertyName="isVoucherImportProcessing">
+				<simple>true</simple>
+			</setProperty>
+			<process ref="updateVoucherImportStatus" />
+			<doTry>
+				<loop doWhile="true">
+					<simple>${exchangeProperty.isLastPage} == false</simple>
+					<process ref="getAvailableVoucherList" />
+					<split parallelProcessing="false">
+						<simple>${body}</simple>
+						<process ref="getListOfVoucherProducts" />
+						<process ref="processVoucherProductsForDb" />
+						<process ref="upsertVoucherInDB" />
+					</split>
+					<process ref="checkNextLoop" />
+				</loop>
+				<doCatch>
+					<exception>java.lang.Exception</exception>
+					<setProperty propertyName="failureReason">
+						<simple>'unable to import'</simple>
+					</setProperty>
+					<process ref="handleException" />
+				</doCatch>
+			</doTry>
+			<setProperty propertyName="isVoucherImportProcessing">
+				<simple>false</simple>
+			</setProperty>
+			<process ref="updateVoucherImportStatus" />
+		</route>
+
+		<route id="updateVoucher">
+			<from uri="direct:updateVoucher" />
+			<process ref="initializeVoucher" />
+			<process ref="loadUserDataByNicknameId" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+			</when>
+			<when>
+				<simple>${exchangeProperty.isEligibleToUpdateVoucher} == 'true'</simple>
+				<process ref="submitVoucherRequest" />
+			</when>
+			<when>
+				<simple>${exchangeProperty.isEligibleToUpdateVoucher} == false || ${exchangeProperty.isPromotionCreated} == true
+				</simple>
+				<when>
+					<simple>${exchangeProperty.isAddPromotionItem} == true </simple>
+					<to uri="direct:addItemInPromotion" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.isRemovePromotionItem} == true </simple>
+					<to uri="direct:removeItemFromPromotion" />
+				</when>
+			</when>
+			<process ref="updatePromotionItemsInDB" />
+			<to uri="direct:invokePromotionMgmtAPI" />
+			<process ref="processPromotionUpdateResponse" />
+		</route>
+
+		<route id="updatePromotionStatus">
+			<from uri="direct:updatePromotionStatus" />
+			<process ref="initUpdateVoucherStatus" />
+			<process ref="loadUserDataByNicknameId" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+			</when>
+			<when>
+				<simple>${exchangeProperty.stopProcess} == null</simple>
+				<process ref="submitUpdatePromotionStatusRequest" />
+			</when>
+			<process ref="updatePromotionStatusInDB" />
+		</route>
+		<route id="invokePromotionMgmtAPI">
+			<from uri="direct:invokePromotionMgmtAPI" />
+			<process ref="buildMudraHeader" />
+			<recipientList>
+				<simple>${exchangeProperty.apiURL}?throwExceptionOnFailure=false
+				</simple>
+			</recipientList>
+		</route>
+	</routeContext>
+</beans>

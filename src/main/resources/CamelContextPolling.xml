@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:cxf="http://camel.apache.org/schema/cxf"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd
+       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+       ">
+	<bean id="initializeItemSyncMessageListenerRoute" class="com.sellinall.lazada.init.InitializeItemSyncMessageListenerRoute" />
+	<bean id="initializeProcessOrders" class="com.sellinall.lazada.init.InitializeProcessOrders" />
+
+	<bean id="buildListOrdersReq" class="com.sellinall.lazada.requests.BuildListOrdersRequest" />
+	<bean id="buildOrderDetailsRequest" class="com.sellinall.lazada.requests.BuildOrderDetailsRequest" />
+	<bean id="submitGetQcStatusRequest" class="com.sellinall.lazada.requests.SubmitGetQcStatusRequest" />	
+	
+	<bean id="processListOrdersResponse" class="com.sellinall.lazada.response.ProcessListOrdersResponse" />
+	<bean id="updateReservedStockInListings" class="com.sellinall.lazada.response.UpdateReservedStockInListings" />
+	<bean id="processFeedListResponse" class="com.sellinall.lazada.response.ProcessFeedListResponse" />
+	<bean id="processFeedDetailResponse" class="com.sellinall.lazada.response.ProcessFeedDetailResponse" />
+	<bean id="processGetQcStatusResponse" class="com.sellinall.lazada.response.ProcessGetQcStatusResponse" />
+	
+	<bean id="prepareReferenceIDQuery" class="com.sellinall.lazada.db.PrepareReferenceIDQuery" />
+	<bean id="processReferenceIDResult" class="com.sellinall.lazada.db.ProcessReferenceIDResult" />
+	<bean id="updateSKUIndividualFailureStatus" class="com.sellinall.lazada.db.UpdateSKUIndividualFailureStatus" />
+	<bean id="updateUserDBLastScannedTime" class="com.sellinall.lazada.db.UpdateUserDBLastScannedTime" />
+	<bean id="updateSKUImageUploadStatus" class="com.sellinall.lazada.db.UpdateSKUImageUploadStatus" />
+	<bean id="updateSKUToMemoryCache" class="com.sellinall.lazada.db.UpdateSKUToMemoryCache" />
+	<bean id="updateSKUQCStatus" class="com.sellinall.lazada.db.UpdateSKUQCStatus" />
+	<bean id="checkIsUsersItemWaitingForApproval" class="com.sellinall.lazada.db.CheckIsUsersItemWaitingForApproval" />
+	<bean id="checkAccountChannelStatus" class="com.sellinall.lazada.db.CheckAccountChannelStatus" />
+	<bean id="checkOrderMovementAutomation" class="com.sellinall.lazada.validation.CheckOrderMovementAutomation" />
+	<bean id="createItemSyncPublishMessage" class="com.sellinall.lazada.message.CreateItemSyncPublishMessage" />
+	<bean id="createOrderItem" class="com.sellinall.lazada.message.CreateOrderItem" />
+	<bean id="constructMessageForPNQ" class="com.sellinall.lazada.message.ConstructMessageForPNQ" />
+	<bean id="constructUpdateOrderMessage" class="com.sellinall.lazada.message.ConstructUpdateOrderMessage" />
+	<bean id="convertToJSON" class="com.sellinall.lazada.util.ByteArrayToJSONTypeConverters" />
+	<bean id="loadUnPaidOrdersFromDB" class="com.sellinall.lazada.db.LoadUnPaidOrdersFromDB" />
+	<bean id="submitIndividualOrderRequest" class="com.sellinall.lazada.requests.SubmitIndividualOrderRequest" />
+	<bean id="checkAndProcessOnlyUpdatedOrders" class="com.sellinall.lazada.bl.CheckAndProcessOnlyUpdatedOrders" />
+	<bean id="getMissingItemDetails" class="com.sellinall.lazada.requests.GetMissingItemDetails" />
+
+	<routeContext id="itemSyncProcessingRoutes" xmlns="http://camel.apache.org/schema/spring">
+		<route id="itemSyncMessageListener">
+			<from uri="direct:itemSyncOrderAndInevntory" />
+			<convertBodyTo type="java.lang.String" />
+			<process ref="convertToJSON" />
+			<process ref="initializeItemSyncMessageListenerRoute" />
+			<to uri="direct:checkAccountHasEligibleToSync" />
+			<doTry>
+				<to uri="direct:startScanning"/>
+				<doCatch>
+					  <exception>java.lang.Exception</exception>
+					  <setHeader headerName="exceptionMessage">
+					  		<simple>${exception.stacktrace}</simple>
+					  </setHeader>
+				</doCatch>
+			</doTry>
+			<when>
+				<simple>${exchangeProperty.accountHasEligiblityToSync} == true</simple>
+				<choice>
+					<when>
+						<simple>${exchangeProperty.requestType} == 'scanNewOrders'</simple>
+						<to uri="direct:publishMessageToNewOrderPollingDelayQueue" />
+					</when>
+					<when>
+						<simple>${exchangeProperty.requestType} == 'scanUpdatedOrders'</simple>
+						<to uri="direct:publishMessageToUpdatedOrderPollingDelayQueue" />
+					</when>
+				</choice>
+			</when>
+		</route>
+		
+		<route id="checkAccountHasEligibleToSync">
+			<from uri="direct:checkAccountHasEligibleToSync" />
+			<process ref="userDBQuery" />
+			<process ref="checkAccountChannelStatus" />
+		</route>
+
+		<route id="startScanning">
+			<from uri="direct:startScanning" />
+			<setBody>
+				<simple>${exchangeProperty.UserDetails}</simple>
+			</setBody>
+			<split parallelProcessing="true">
+				<method ref="splitterBean" method="splitUser" />
+					<to uri="direct:processOrders" />
+					<when>
+						<simple>${exchangeProperty.isOrderPollingScuccess} == true</simple>
+						<when>
+							<simple>${exchangeProperty.requestType} != 'scanNewOrders'</simple>
+							<to uri="direct:processQcStatusCheck" />
+							<to uri="direct:processFailureUpdateItems"/>
+							<!-- <to uri="direct:pullReconcilation" /> -->
+						</when>
+						<process ref="updateUserDBLastScannedTime" />
+					</when>
+			</split>
+		</route>
+		
+		<route id="processOrders">
+			<from uri="direct:processOrders" />
+			<process ref="initializeProcessOrders" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+				<to uri="direct:checkAndStopProcess" />
+			</when>
+			<loop doWhile="true">
+				<simple>${exchangeProperty.hasMoreRecords} == true</simple>
+				<process ref="buildListOrdersReq" />
+				<when>
+					<simple>${exchangeProperty.isOrderPollingScuccess} == true</simple>
+					<!-- If there is no communication failure then we will continue -->
+					<process ref="processListOrdersResponse" />
+					<choice>
+						<when>
+							<simple>${exchangeProperty.isResponseHasOrder} == true</simple>
+							<!-- if channel response has any changes in order or new orders then will continue here -->
+							<process ref="checkAndProcessOnlyUpdatedOrders" />
+							<split parallelProcessing="false">
+								<simple>${body}</simple>
+								<to uri="direct:getOrderDetails" />
+							</split>
+						</when>
+					</choice>
+				</when>
+			</loop>
+			<!-- commented because of unpaid cancelled orders updating stock twice -->
+			<!-- <when>
+				<simple>${exchangeProperty.requestType} != 'scanNewOrders'</simple>
+				<to uri = "direct:processUnpaidCancelledOrder" />
+			</when> -->
+		</route>
+
+		<route id="processUnpaidCancelledOrder">
+			<from uri="direct:processUnpaidCancelledOrder" />
+			<process ref="loadUnPaidOrdersFromDB" />
+			<split parallelProcessing="true">
+				<simple>${body}</simple>
+				<to uri="direct:processEachUnpaidCancelledOrder" />
+			</split>
+		</route>
+		
+		<route id="processEachUnpaidCancelledOrder">
+			<from uri="direct:processEachUnpaidCancelledOrder" />
+			<process ref="submitIndividualOrderRequest" />
+			<when>
+				<simple>${exchangeProperty.isUpdateUnpaidOrders} == true</simple>
+				<setHeader headerName="rabbitmq.ROUTING_KEY">
+					<constant>partnerNotifKey</constant>
+				</setHeader>
+				<setHeader headerName="rabbitmq.DELIVERY_MODE">
+					<constant>2</constant>
+				</setHeader>
+				<convertBodyTo type="java.lang.String" />
+				<to
+					uri="rabbitmq://{{partnerNotif.host}}:{{partnerNotif.tx.port}}/partnerNotifExchange?connectionFactory=#txPartnerNotifFactory&amp;exchangeType=topic&amp;autoDelete=false&amp;durable=true&amp;declare=false" />
+			</when>
+		</route>
+		
+		<route id="getOrderDetails">
+			<from uri="direct:getOrderDetails" />
+			<process ref="buildOrderDetailsRequest" />
+			<to uri="direct:processOrderItems" />
+			<when>
+				<simple>${exchangeProperty.needToUpdateDocumnetUrl} == true</simple>
+				<to uri="direct:getShippingLabel" />
+			</when>
+			<to uri="direct:constructPNQMessage" />
+		</route>
+
+		<route id="processOrderItems">
+			<from uri="direct:processOrderItems" />
+			<to uri="direct:setSKUForOrderItem" />
+			<when>
+				<simple>${exchangeProperty.individualSKUPerChannel} == true and
+					${exchangeProperty.isEligibleToPullMissingItem} == true and
+					${exchangeProperty.missingItemIdList.size} > 0
+					</simple>
+					<to uri="direct:processMissingItem" />
+					<when>
+						<simple>${exchangeProperty.isImportMissingItem} == true</simple>
+						<setBody>
+							<simple>${exchangeProperty.orderItemResponse}</simple>
+						</setBody>
+						<to uri="direct:setSKUForOrderItem" />
+					</when>
+			</when>
+			<setProperty propertyName="inventoryUrl">
+				<simple>{{inventory.endpoint}}</simple>
+			</setProperty>
+			<process ref="createOrderItem" />
+			<when>
+			  <simple> ${exchangeProperty.isGlobalAccount} == true </simple>
+				<to uri="updateReservedStockInListings" />
+			</when>
+		</route>
+				
+		<route id="processMissingItem">
+		<from uri="direct:processMissingItem" />
+			<setProperty propertyName = "isImportMissingItem">
+				<constant>true</constant>
+			</setProperty>
+			<setProperty propertyName="itemListIndex">
+				<constant>0</constant>
+			</setProperty>
+			<loop>
+				<simple>${exchangeProperty.missingItemIdList.size}</simple>
+				<doTry>
+					<process ref="getMissingItemDetails" />
+					<when>
+						<simple>${exchangeProperty.responseSuccess} == true and ${exchangeProperty.itemStatus} != "deleted" and ${exchangeProperty.hasItemExists} == true</simple>
+						<to uri="direct:loadAndProcessAutoLinking" />
+					</when>
+					<doCatch>
+						<exception>java.lang.Exception</exception>
+						<exception>org.codehaus.jettison.json.JSONException</exception>
+						<setHeader headerName="exceptionMessage">
+							<simple>${exception.stacktrace}</simple>
+						</setHeader>
+						<process ref="handleException" />
+					</doCatch>
+				</doTry>
+				<setProperty propertyName="itemListIndex">
+					<simple>${exchangeProperty.itemListIndex}++</simple>
+				</setProperty>
+			</loop>
+		</route>
+
+		<route id="setSKUForOrderItem">
+			<from uri="direct:setSKUForOrderItem" />
+			<process ref="prepareReferenceIDQuery" />
+			<to uri="mongodb:mongoInventoryBean?database={{mongo.inventory.database}}&amp;collection=inventory&amp;operation=findAll" />
+			<process ref="processReferenceIDResult" />
+		</route>
+
+		<route id="constructPNQMessage">
+			<from uri="direct:constructPNQMessage" />
+			<process ref="constructMessageForPNQ" />
+			<process ref="checkOrderMovementAutomation" />
+			<setBody>
+				<simple>${exchangeProperty.order}</simple>
+			</setBody>
+			<to uri="direct:publishMessageToPNQ"/>
+			<choice>
+				<when>
+					<simple>${exchangeProperty.isAutomationEnabled} == true</simple>
+					<to uri="direct:publishUpdateOrderMessage" />
+				</when>
+				<when>
+					<simple>${exchangeProperty.isAutoPackOrders} == true and ${exchangeProperty.isNewOrder} == true and ${exchangeProperty.isAlreadyShippingURLExiting} == false </simple>
+					<setProperty propertyName="isAutoPackEnabled">
+						<simple>true</simple>
+					</setProperty>
+					<to uri="direct:publishUpdateOrderMessage" />
+				</when>
+			</choice>
+		</route>
+
+		<route id="publishMessageToPNQ">
+			<from uri="direct:publishMessageToPNQ"/>
+			<setHeader headerName="rabbitmq.ROUTING_KEY">
+				<constant>partnerNotifKey</constant>
+			</setHeader>
+			<setHeader headerName="rabbitmq.DELIVERY_MODE">
+				<constant>2</constant>
+			</setHeader>
+			<convertBodyTo type="java.lang.String" />
+			<to
+				uri="rabbitmq://{{partnerNotif.host}}:{{partnerNotif.tx.port}}/partnerNotifExchange?connectionFactory=#txPartnerNotifFactory&amp;exchangeType=topic&amp;autoDelete=false&amp;durable=true&amp;declare=false" />
+		</route>
+
+		<route id="publishUpdateOrderMessage">
+			<from uri="direct:publishUpdateOrderMessage" />
+			<process ref="constructUpdateOrderMessage" />
+			<when>
+				<simple>${exchangeProperty.isTransitionValid} == true</simple>
+				<setHeader headerName="rabbitmq.ROUTING_KEY">
+					<constant>lazadaOrderUpdate10SecKey</constant>
+				</setHeader>
+				<setHeader headerName="rabbitmq.DELIVERY_MODE">
+					<constant>2</constant>
+				</setHeader>
+				<convertBodyTo type="java.lang.String" />
+				<to
+					uri="rabbitmq://{{lazada.host}}:{{lazada.tx.port}}/lazadaListingExchange?connectionFactory=#txLazadaFactory&amp;exchangeType=topic&amp;autoDelete=false&amp;durable=true&amp;declare=false" pattern="InOnly"  />
+			</when>
+		</route>
+
+		<route id="publishMessageToNewOrderPollingDelayQueue">
+			<from uri="direct:publishMessageToNewOrderPollingDelayQueue" />
+			<process ref="createItemSyncPublishMessage" />
+			<setHeader headerName="rabbitmq.ROUTING_KEY">
+				<constant>lazadaNewOrderPollingDelayKey</constant>
+			</setHeader>
+			<setHeader headerName="rabbitmq.DELIVERY_MODE">
+				<constant>2</constant>
+			</setHeader>
+			<convertBodyTo type="java.lang.String" />
+			<to
+				uri="rabbitmq://{{lazada.host}}:{{lazada.tx.port}}/lazadaListingExchange?connectionFactory=#txLazadaFactory&amp;exchangeType=topic&amp;autoDelete=false&amp;durable=true&amp;declare=false" pattern="InOnly"  />
+		</route>
+
+		<route id="publishMessageToUpdatedOrderPollingDelayQueue">
+			<from uri="direct:publishMessageToUpdatedOrderPollingDelayQueue" />
+			<process ref="createItemSyncPublishMessage" />
+			<setHeader headerName="rabbitmq.ROUTING_KEY">
+				<constant>lazadaUpdatedOrderPolling30MinsDelayKey</constant>
+			</setHeader>
+			<setHeader headerName="rabbitmq.DELIVERY_MODE">
+				<constant>2</constant>
+			</setHeader>
+			<convertBodyTo type="java.lang.String" />
+			<to
+				uri="rabbitmq://{{lazada.host}}:{{lazada.tx.port}}/lazadaListingExchange?connectionFactory=#txLazadaFactory&amp;exchangeType=topic&amp;autoDelete=false&amp;durable=true&amp;declare=false" pattern="InOnly"  />
+		</route>
+
+		<route id="syncMissingOrder">
+			<from uri="direct:syncMissingOrder" />
+			<process ref="initializeGetOrderIdsList" />
+			<process ref="loadUserDataByNicknameId" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+				<to uri="direct:checkAndStopProcess" />
+			</when>
+			<split>
+				<simple>${exchangeProperty.orderIDList}</simple>
+				<setProperty propertyName="orderID">
+					<simple>${body}</simple>
+				</setProperty>
+				<process ref="buildGetDetailsRequest" />
+				<process ref="processGetDetailsResponse" />
+				<when>
+					<simple>${exchangeProperty.isOderResponseAvailable} == true</simple>
+					<to uri="direct:getOrderDetails" />
+				</when>
+			</split>
+		</route>
+	</routeContext>
+</beans>

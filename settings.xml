@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+<servers>
+<server>
+<id>ftp-repository</id>
+<username>ram</username>
+<password>11111111</password>
+</server>
+</servers>
+<profiles>
+
+<profile>
+<id>ftp-repository</id>
+<repositories>
+<repository>
+<id>ftp-repository</id>
+<name>com.sellinall.util</name>
+<url>ftp://ftp.sellonall.com/repo/</url>
+</repository>
+</repositories>
+</profile>
+</profiles>
+ <activeProfiles>
+    <activeProfile>ftp-repository</activeProfile>
+  </activeProfiles>
+
+</settings>

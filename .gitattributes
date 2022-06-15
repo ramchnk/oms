@@ -1,0 +1,3 @@
+src/main/resources/config.properties merge=ours
+src/main/resources/ConfigValues.properties merge=ours
+src/main/resources/APIUrl.properties merge=ours

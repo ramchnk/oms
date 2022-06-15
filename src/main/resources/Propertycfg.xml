@@ -1,0 +1,121 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+            http://www.springframework.org/schema/beans     
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/tx 
+            http://www.springframework.org/schema/tx/spring-tx.xsd
+            http://www.springframework.org/schema/context 
+            http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<bean id="environmentVariablesConfiguration" class="org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig">
+		<property name="algorithm" value="PBEWithMD5AndDES" />
+		<property name="passwordEnvName" value="APP_ENCRYPTION_PASSWORD" />
+	</bean>
+	<bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
+		<property name="config" ref="environmentVariablesConfiguration" />
+	</bean>
+	<bean id="propertyConfigurer" class="org.jasypt.spring31.properties.EncryptablePropertyPlaceholderConfigurer">
+		<constructor-arg ref="configurationEncryptor" />
+		<property name="location">
+			<value>ConfigValues.properties</value>
+		</property>
+	</bean>
+	<bean id="Config" class="com.mudra.sellinall.config.Config">
+
+		<!-- faceBook Excahnge Token -->
+		<property name="FbTokenExchangeUri" value="${FbTokenExchangeUri}" />
+
+		<!-- DB Values -->
+		<property name="userConfigDBURI" value="${userConfigDBURI}" />
+		<property name="userConfigDBName" value="${userConfigDBName}" />
+		<property name="inventoryConfigDBURI" value="${inventoryConfigDBURI}" />
+		<property name="inventoryConfigDBName" value="${inventoryConfigDBName}" />
+		<property name="notificationDBURI" value="${notificationDBURI}" />
+		<property name="notificationDBName" value="${notificationDBName}" />
+		<property name="uploadImageToSellInAllUrl" value="${uploadImageToSellInAllUrl}" />
+		<property name="uploadImageUri" value="${uploadImageUri}" />
+		<property name="noImageURL" value="${noImageURL}" />
+		<property name="noImageUploadImageToSellInAllUrl" value="${noImageUploadImageToSellInAllUrl}" />
+		<property name="validateImageServer" value="${validateImageServer}" />
+		<property name="SIAListingLookupServerURL" value="${SIAListingLookupServerURL}" />
+		<property name="SIAPromotionServerURL" value="${SIAPromotionServerURL}" />
+		<property name="SIACategoryNameLookupURL" value="${SIACategoryNameLookupURL}" />
+		<property name="SettingsCompletedURL" value="${SettingsCompletedURL}" />
+		<property name="chatReauthCompletedURLAdmin" value="${chatReauthCompletedURLAdmin}" />
+		
+		<property name="CurrencyForSG" value="${CurrencyForSG}" />
+		<property name="CurrencyForID" value="${CurrencyForID}" />
+		<property name="CurrencyForMY" value="${CurrencyForMY}" />
+		<property name="CurrencyForPH" value="${CurrencyForPH}" />
+		<property name="CurrencyForTH" value="${CurrencyForTH}" />
+		<property name="CurrencyForVN" value="${CurrencyForVN}" />
+		
+		<!-- memcached -->
+		<property name="MemcachedCloudUsername" value="${MemcachedCloudUsername}" />
+		<property name="MemcachedCloudPassword" value="${MemcachedCloudPassword}" />
+		<property name="MemcachedCloudServers" value="${MemcachedCloudServers}" />
+		
+		<property name="RecordsPerPage" value="${RecordsPerPage}" />
+		<property name="needToPublishItemSyncMessage" value="${needToPublishItemSyncMessage}" />
+		
+		<property name="completeAuthUrl" value="${completeAuthUrl}" />
+		<property name="LazadaClientID" value="${LazadaClientID}" />
+		<property name="LazadaChatClientID" value="${LazadaChatClientID}" />
+		<property name="LazadaChatClientSecret" value="${LazadaChatClientSecret}" />
+		<property name="LazadaClientSecret" value="${LazadaClientSecret}" />
+		<property name="initiateAuthURL" value="${initiateAuthURL}"></property>
+		<property name="selfEndpoint" value="${selfEndpoint}"></property>
+		<property name="inventoryUrl" value="${inventoryUrl}"></property>
+		<property name="SIAOrderURL" value="${SIAOrderURL}"></property>
+		<property name="orderLimit" value="${orderLimit}"></property>
+		<property name="siaIntegratedShippingProviderList" value="${siaIntegratedShippingProviderList}" />
+
+		<property name="orderConfigDBURI" value="${orderConfigDBURI}" />
+		<property name="orderConfigDBName" value="${orderConfigDBName}" />
+
+		<property name="partnerSignupChannels" value="${partnerSignupChannels}" />
+		<property name="partnerSignUpCompletedUrl" value="${partnerSignUpCompletedUrl}" />
+		<property name="sofPortalURLSG" value="${sofPortalURLSG}" />
+		<property name="sofPortalURLMY" value="${sofPortalURLMY}" />
+		<property name="sofPortalURLID" value="${sofPortalURLID}" />
+		<property name="lazadaCommissionFeePercent" value="${lazadaCommissionFeePercent}" />
+		<property name="sofEnabledCountries" value="${sofEnabledCountries}" />
+
+		<property name="commonRefreshTokenSG" value="${commonRefreshTokenSG}" />
+		<property name="commonRefreshTokenID" value="${commonRefreshTokenID}" />
+		<property name="commonRefreshTokenMY" value="${commonRefreshTokenMY}" />
+		<property name="commonRefreshTokenPH" value="${commonRefreshTokenPH}" />
+		<property name="commonRefreshTokenTH" value="${commonRefreshTokenTH}" />
+
+		<property name="commonClientSecret" value="${commonClientSecret}" />
+		<property name="commonClientID" value="${commonClientID}" />
+
+		<property name="lazadaAppName" value="${lazadaAppName}" />
+		<property name="lazadaChatAppName" value="${lazadaChatAppName}" />
+		<property name="commonApiUrl" value="${commonApiUrl}" />
+
+		<property name="lazadaIntegratedShippingCarriers" value="${lazadaIntegratedShippingCarriers}" />
+		<property name="uploadShippinglabelToSELLinALLUrl" value="${uploadShippinglabelToSELLinALLUrl}" />
+		<property name="uploadShippinglabelUrl" value="${uploadShippinglabelUrl}" />
+		<property name="individualSKUPerChannelEnabled" value="${individualSKUPerChannelEnabled}" />
+		<property name="settlementSheetHeader" value="${settlementSheetHeader}" />
+		<property name="defaultSettlementDateRangeSG" value="${defaultSettlementDateRangeSG}" />
+		<property name="defaultSettlementDateRangeID" value="${defaultSettlementDateRangeID}" />
+		<property name="defaultSettlementDateRangeMY" value="${defaultSettlementDateRangeMY}" />
+		<property name="defaultSettlementDateRangePH" value="${defaultSettlementDateRangePH}" />
+		<property name="defaultSettlementDateRangeTH" value="${defaultSettlementDateRangeTH}" />
+		<property name="defaultSettlementDateRangeVN" value="${defaultSettlementDateRangeVN}" />
+		<property name="updateStockViaProductUpdateApi" value="${updateStockViaProductUpdateApi}" />
+		<property name="updateStockViaSellableQuantityApi" value="${updateStockViaSellableQuantityApi}" />
+		<property name="orderFeeNames" value="${orderFeeNames}" />
+		<property name="refundFeeNames" value="${refundFeeNames}" />
+		<property name="claimFeeNames" value="${claimFeeNames}" />
+		<property name="testAccountNumber" value="${testAccountNumber}" />
+		<property name="removeKeyPropFieldTitleList" value="${removeKeyPropFieldTitleList}" />
+		<property name="promotionStartDate" value="${promotionStartDate}" />
+		<property name="promotionEndDate" value="${promotionEndDate}" />
+		<property name="globalCountryCode" value="${globalCountryCode}" />
+	</bean>
+</beans>
