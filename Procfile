@@ -1,1 +1,1 @@
-web: java -jar target/lazadalisting-1.0-SNAPSHOT.jar
+web: java -jar target/oms-1.0-SNAPSHOT.jar
