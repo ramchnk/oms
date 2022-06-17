@@ -80,12 +80,12 @@ public class MainPrg {
 		server.setHandler(root);
 		EncryptionUtil.init();
 		// Init memory cache
-		LazadaUtil.initMemoryCached();
-		ApplicationContext appContext = new ClassPathXmlApplicationContext("CamelContext.xml");
-		CamelContext camelContext = SpringCamelContext.springCamelContext(appContext, false);
-		camelContext.start();
+	//	LazadaUtil.initMemoryCached();
+	//	ApplicationContext appContext = new ClassPathXmlApplicationContext("CamelContext.xml");
+	//	CamelContext camelContext = SpringCamelContext.springCamelContext(appContext, false);
+	//	camelContext.start();
 
-		ProducerTemplate template=camelContext.createProducerTemplate();
+	/*	ProducerTemplate template=camelContext.createProducerTemplate();
 		Listing.setProducerTemplate(template);
 		AccountService.setProducerTemplate(template);
 		PolicyServices.setProducerTemplate(template);
@@ -99,6 +99,7 @@ public class MainPrg {
 		BrandService.setProducerTemplate(template);
 		GetAPIDetailService.setProducerTemplate(template);
 		ChannelDataService.setProducerTemplate(template);
+		*/
 		server.start();
 		server.join();
 	}

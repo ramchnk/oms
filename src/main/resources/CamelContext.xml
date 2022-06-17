@@ -1338,7 +1338,7 @@
 			</doTry>
 		</route>
 
-		<!-- Message listener for post or update event either from front end or from PartnerNotifServ -->
+		<!-- Message listener for post or update event either from front end or from PartnerNotifServ 
 		<route id="messageListener">
 			<from
 				uri="rabbitmq://{{lazada.host}}:{{lazada.rx.port}}/lazadaListingExchange?queue=lazadaListingQueue&amp;routingKey=lazadaListingKey&amp;exchangeType=topic&amp;connectionFactory=#rxLazadaFactory&amp;autoDelete=false&amp;durable=true&amp;autoAck=false&amp;prefetchEnabled=true&amp;prefetchSize=0&amp;prefetchCount=1&amp;prefetchGlobal=false&amp;concurrentConsumers=6&amp;automaticRecoveryEnabled=true" />
@@ -1487,6 +1487,6 @@
 			</when>
 		</choice>
 	</route>
-		
+		-->
 	</camelContext>
 </beans>
