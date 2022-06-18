@@ -15,29 +15,11 @@ public class StartAuthRoute implements Processor {
 		JSONObject response = new JSONObject();
 		response.put("response", "success");
 		String url = Config.getConfig().getInitiateAuthURL() + "&redirect_uri=" + Config.getConfig().getSelfEndpoint();
-		if (inBody.has("appType") && inBody.getString("appType").equals("chat")) {
-			url += "/settings/complete/chat/" + inBody.getString("accountNumber");
-			if (inBody.has("nickNameID")) {
-				url += "/" + inBody.getString("nickNameID");
-			}
-			if (inBody.has("requestFrom") && inBody.getString("requestFrom").equals("admin")) {
-				url += "?requestFrom=admin";
-			}
-		} else {
-			url += "/settings/complete/" + inBody.getString("accountNumber");
-			if (inBody.has("nickNameID")) {
-				url += "/" + inBody.getString("nickNameID");
-			}
-		}
-
-		if (inBody.has("signUpChannel")) {
-			url += "/true/" + inBody.getString("signUpChannel");
-		}
-		if (inBody.has("appType") && inBody.getString("appType").equals("chat")) {
-			url += "&client_id=" + Config.getConfig().getLazadaChatClientID();
-		} else {
-			url += "&client_id=" + Config.getConfig().getLazadaClientID();
-		}
+		
+		url += "/settings/complete/" + inBody.getString("accountNumber");
+		
+		url += "&client_id=" + Config.getConfig().getLazadaClientID();
+		
 		response.put("url", url);
 		exchange.getOut().setBody(response);
 	}

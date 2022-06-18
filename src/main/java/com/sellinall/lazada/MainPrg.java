@@ -100,6 +100,7 @@ public class MainPrg {
 		GetAPIDetailService.setProducerTemplate(template);
 		ChannelDataService.setProducerTemplate(template);
 		*/
+		
 		server.start();
 		server.join();
 	}
