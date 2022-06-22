@@ -1,22 +1,21 @@
 package com.sellinall.lazada.services;
 
-import java.io.IOException;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.camel.ProducerTemplate;
-import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.springframework.http.HttpStatus;
 
-@Path("inventory/price")
+@Path("/orders")
 @Produces(MediaType.APPLICATION_JSON)
-public class ItemPrice {
-	static Logger log = Logger.getLogger(ItemPrice.class.getName());
+public class GetOrders {
+
 	private static ProducerTemplate template;
 
 	public static void setProducerTemplate(ProducerTemplate template1) {
@@ -24,11 +23,11 @@ public class ItemPrice {
 	}
 
 	@GET
-	public Object getItemPrice(@QueryParam("itemID") String itemID,
-			@QueryParam("countryCode") String countryCode) throws JSONException, IOException {
-		JSONObject data = new JSONObject();
-		data.put("itemID", itemID);
-		data.put("countryCode", countryCode);
-		return template.requestBody("direct:getItemPrice", data, JSONObject.class);
+	@Path("/lazada")
+	public Response getOrders(@QueryParam("from") String from) throws JSONException {
+		JSONObject request = new JSONObject();
+		request.put("from", from);
+		JSONObject response = template.requestBody("direct:pullOders", request, JSONObject.class);
+		return Response.status(Integer.parseInt(HttpStatus.OK.toString())).entity(response).build();
 	}
 }

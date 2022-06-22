@@ -18,20 +18,12 @@
 	<bean id="processListOrdersResponse" class="com.sellinall.lazada.response.ProcessListOrdersResponse" />
 	<bean id="updateReservedStockInListings" class="com.sellinall.lazada.response.UpdateReservedStockInListings" />
 	<bean id="processFeedListResponse" class="com.sellinall.lazada.response.ProcessFeedListResponse" />
-	<bean id="processFeedDetailResponse" class="com.sellinall.lazada.response.ProcessFeedDetailResponse" />
-	<bean id="processGetQcStatusResponse" class="com.sellinall.lazada.response.ProcessGetQcStatusResponse" />
 	
-	<bean id="prepareReferenceIDQuery" class="com.sellinall.lazada.db.PrepareReferenceIDQuery" />
-	<bean id="processReferenceIDResult" class="com.sellinall.lazada.db.ProcessReferenceIDResult" />
-	<bean id="updateSKUIndividualFailureStatus" class="com.sellinall.lazada.db.UpdateSKUIndividualFailureStatus" />
+	
+	
 	<bean id="updateUserDBLastScannedTime" class="com.sellinall.lazada.db.UpdateUserDBLastScannedTime" />
-	<bean id="updateSKUImageUploadStatus" class="com.sellinall.lazada.db.UpdateSKUImageUploadStatus" />
-	<bean id="updateSKUToMemoryCache" class="com.sellinall.lazada.db.UpdateSKUToMemoryCache" />
-	<bean id="updateSKUQCStatus" class="com.sellinall.lazada.db.UpdateSKUQCStatus" />
-	<bean id="checkIsUsersItemWaitingForApproval" class="com.sellinall.lazada.db.CheckIsUsersItemWaitingForApproval" />
 	<bean id="checkAccountChannelStatus" class="com.sellinall.lazada.db.CheckAccountChannelStatus" />
 	<bean id="checkOrderMovementAutomation" class="com.sellinall.lazada.validation.CheckOrderMovementAutomation" />
-	<bean id="createItemSyncPublishMessage" class="com.sellinall.lazada.message.CreateItemSyncPublishMessage" />
 	<bean id="createOrderItem" class="com.sellinall.lazada.message.CreateOrderItem" />
 	<bean id="constructMessageForPNQ" class="com.sellinall.lazada.message.ConstructMessageForPNQ" />
 	<bean id="constructUpdateOrderMessage" class="com.sellinall.lazada.message.ConstructUpdateOrderMessage" />

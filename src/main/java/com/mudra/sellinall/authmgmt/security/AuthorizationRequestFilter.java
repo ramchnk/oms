@@ -37,6 +37,16 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter {
 			log.debug("No Need To authorize this url because it is from LAZADALISTING / health service ");
 			return arg0;
 		}
+		
+		if(arg0.getPath().contains("settings/initiate")) {
+			log.debug("No Need To authorize this url because it is from LAZADALISTING / health service ");
+			return arg0;
+		}
+		
+		if(arg0.getPath().contains("orders/lazada")) {
+			log.debug("No Need To authorize this url because it is from LAZADALISTING / health service ");
+			return arg0;
+		}
 		/*
 		 * if (arg0.getAbsolutePath().getHost().equals("localhost")) { return
 		 * arg0; }

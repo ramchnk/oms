@@ -68,6 +68,7 @@ public class NewLazadaConnectionUtil {
 				url += "?app_key=" + clientID;
 			}
 			url += "&sign_method=hmac&sign=" + sign + "&timestamp=" + timestamp + queryParams;
+
 			if (method.equals("POST")) {
 				response = _doPost(url, payload, method);
 			} else {

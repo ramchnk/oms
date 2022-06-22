@@ -11,12 +11,11 @@ public class StartAuthRoute implements Processor {
 	static Logger log = Logger.getLogger(StartAuthRoute.class.getName());
 
 	public void process(Exchange exchange) throws Exception {
-		JSONObject inBody = exchange.getIn().getBody(JSONObject.class);
 		JSONObject response = new JSONObject();
 		response.put("response", "success");
 		String url = Config.getConfig().getInitiateAuthURL() + "&redirect_uri=" + Config.getConfig().getSelfEndpoint();
 		
-		url += "/settings/complete/" + inBody.getString("accountNumber");
+		url += "/settings/complete";
 		
 		url += "&client_id=" + Config.getConfig().getLazadaClientID();
 		

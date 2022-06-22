@@ -12,18 +12,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import com.mudra.sellinall.config.APIUrlConfig;
 import com.mudra.sellinall.config.Config;
 import com.sellinall.lazada.services.AccountService;
-import com.sellinall.lazada.services.BrandService;
-import com.sellinall.lazada.services.CategoriesService;
-import com.sellinall.lazada.services.CategoryAttributeService;
-import com.sellinall.lazada.services.CategorySuggestionService;
-import com.sellinall.lazada.services.ChannelDataService;
-import com.sellinall.lazada.services.DescriptionServices;
-import com.sellinall.lazada.services.GetAPIDetailService;
-import com.sellinall.lazada.services.GetDocumentServices;
-import com.sellinall.lazada.services.ItemPrice;
-import com.sellinall.lazada.services.Listing;
-import com.sellinall.lazada.services.PolicyServices;
-import com.sellinall.lazada.services.ChatService;
+import com.sellinall.lazada.services.GetOrders;
 import com.sellinall.lazada.util.LazadaUtil;
 import com.sellinall.util.AuthConstant;
 import com.sellinall.util.EncryptionUtil;
@@ -80,29 +69,20 @@ public class MainPrg {
 		server.setHandler(root);
 		EncryptionUtil.init();
 		// Init memory cache
-	//	LazadaUtil.initMemoryCached();
-	//	ApplicationContext appContext = new ClassPathXmlApplicationContext("CamelContext.xml");
-	//	CamelContext camelContext = SpringCamelContext.springCamelContext(appContext, false);
-	//	camelContext.start();
+		LazadaUtil.initMemoryCached();
+		ApplicationContext appContext = new ClassPathXmlApplicationContext("CamelContext.xml");
+		CamelContext camelContext = SpringCamelContext.springCamelContext(appContext, false);
+		camelContext.start();
 
-	/*	ProducerTemplate template=camelContext.createProducerTemplate();
-		Listing.setProducerTemplate(template);
+		ProducerTemplate template=camelContext.createProducerTemplate();
+		
 		AccountService.setProducerTemplate(template);
-		PolicyServices.setProducerTemplate(template);
-		GetDocumentServices.setProducerTemplate(template);
-		DescriptionServices.setProducerTemplate(template);
-		CategoriesService.setProducerTemplate(template);
-		CategoryAttributeService.setProducerTemplate(template);
-		ChatService.setProducerTemplate(template);
-		CategorySuggestionService.setProducerTemplate(template);
-		ItemPrice.setProducerTemplate(template);
-		BrandService.setProducerTemplate(template);
-		GetAPIDetailService.setProducerTemplate(template);
-		ChannelDataService.setProducerTemplate(template);
-		*/
+		GetOrders.setProducerTemplate(template);
 		
 		server.start();
 		server.join();
 	}
+	
+	
 
 }

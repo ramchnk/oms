@@ -17,13 +17,9 @@ public class UpdateAccessToken implements Processor {
 		
 		JSONObject responseObj = exchange.getProperty("userCredentials", JSONObject.class);
 		String accessToken = responseObj.getString("access_token");
-		String accountNumber = exchange.getProperty("accountNumber", String.class);
-		String nickNameID = exchange.getProperty("nickNameID", String.class);
-		String appType = "";
-		if (exchange.getProperties().containsKey("appType") && !exchange.getProperty("appType", String.class).isEmpty()) {
-			appType = "-" + exchange.getProperty("appType", String.class);
-		}
-		String key = accountNumber + "-" + nickNameID + appType + "-accessToken";
+		String accountNumber = "dormx";
+		
+		String key = accountNumber + "-accessToken";
 		if (accessToken == null) {
 			exchange.setProperty("stopProcess", true);
 			log.error("refresh accesstoken failed for " + key);

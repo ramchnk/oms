@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.log4j.Logger;
+import org.codehaus.jettison.json.JSONObject;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -13,7 +15,7 @@ public class CheckAccountChannelStatus implements Processor {
 
 	public void process(Exchange exchange) throws Exception {
 		DBObject account = exchange.getProperty("UserDetails", DBObject.class);
-		exchange.setProperty("channelName", "lazada");
+		exchange.setProperty("ordersList", new ArrayList<JSONObject>());
 		account.put("channelName", "lazada");
 		exchange.setProperty("UserDetails", account);
 		if (!account.containsField("lazada")) {
