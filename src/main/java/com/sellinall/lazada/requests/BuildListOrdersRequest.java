@@ -33,8 +33,8 @@ public class BuildListOrdersRequest implements Processor {
 		map.put("offset", pageOffSet);
 		map.put("limit", limit);
 		map.put("access_token", accessToken);
-		map.put("sort_direction", "ASC");
-		String queryParams = "&offset=" + pageOffSet + "&limit=" + limit + "&sort_direction=ASC";
+		map.put("sort_direction", "DESC");
+		String queryParams = "&offset=" + pageOffSet + "&limit=" + limit + "&sort_direction=DESC";
 
 		String fromTime = exchange.getProperty("from", String.class);
 		fromTime += "T00:00:00+08:00";
