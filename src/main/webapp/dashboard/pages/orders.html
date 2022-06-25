@@ -329,7 +329,7 @@
                   if(orderStatus == "shipped"){
                     statusColor = "success";
 
-                  }else if(orderStatus == "pending"){
+                  }else if(orderStatus == "pending" || orderStatus == "packed"){
                     statusColor = "info";
 
                   }else if(orderStatus == "delivered"){
@@ -337,7 +337,6 @@
 
                   }else if(orderStatus == "unpaid"){
                     statusColor = "danger";
-
                   }
                   table += '<tr>'+
                             '<td>'+
