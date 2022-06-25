@@ -3,12 +3,9 @@
  */
 package com.sellinall.lazada.init;
 
-import java.util.ArrayList;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.log4j.Logger;
-import org.codehaus.jettison.json.JSONObject;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;

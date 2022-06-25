@@ -12,7 +12,9 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import com.mudra.sellinall.config.APIUrlConfig;
 import com.mudra.sellinall.config.Config;
 import com.sellinall.lazada.services.AccountService;
+import com.sellinall.lazada.services.GetDocuments;
 import com.sellinall.lazada.services.GetOrders;
+import com.sellinall.lazada.services.GetOrdersItems;
 import com.sellinall.lazada.util.LazadaUtil;
 import com.sellinall.util.AuthConstant;
 import com.sellinall.util.EncryptionUtil;
@@ -78,7 +80,8 @@ public class MainPrg {
 		
 		AccountService.setProducerTemplate(template);
 		GetOrders.setProducerTemplate(template);
-		
+		GetOrdersItems.setProducerTemplate(template);
+		GetDocuments.setProducerTemplate(template);
 		server.start();
 		server.join();
 	}

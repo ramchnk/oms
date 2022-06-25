@@ -13,18 +13,16 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 
 /**
- * @author vikraman
+ * @author Ram
  * 
  */
 public class InitializeGetDocument implements Processor {
 	static Logger log = Logger.getLogger(InitializeGetDocument.class.getName());
 
 	public void process(Exchange exchange) throws Exception {
-
 		JSONObject inBody = exchange.getIn().getBody(JSONObject.class);
 		log.debug("InBody: " + inBody);
 		exchange.getOut().setBody(inBody);
-		exchange.setProperty("accountNumber", inBody.get("accountNumber"));
 		exchange.setProperty("documentType", inBody.get("documentType"));
 		exchange.setProperty("orderIDs", inBody.get("orderIDs"));
 		if (inBody.has("orderIDs")) {
@@ -35,9 +33,6 @@ public class InitializeGetDocument implements Processor {
 			}
 			exchange.setProperty("orderItemIDs", orderItemIDsList);
 		}
-		String nickNameId =inBody.getString("nickNameID");
-		exchange.setProperty("nickNameID", nickNameId);
 		exchange.setProperty("requestType", "getDocuments");
-		exchange.setProperty("channelName", nickNameId.split("-")[0]);
 	}
 }

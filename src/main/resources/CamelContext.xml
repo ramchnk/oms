@@ -14,6 +14,8 @@
 	
 	<bean id="checkAccountChannelStatus" class="com.sellinall.lazada.db.CheckAccountChannelStatus" />
 	<bean id="initializeProcessOrders" class="com.sellinall.lazada.init.InitializeProcessOrders" />
+	<bean id="initializeGetDocument" class="com.sellinall.lazada.init.InitializeGetDocument" />
+	<bean id="initGetOrderDetails" class="com.sellinall.lazada.init.InitGetOrderDetails" />
 
 	
 	<bean id="userDBQuery" class="com.sellinall.lazada.db.UserDBQuery" />
@@ -32,7 +34,10 @@
 	<bean id="processExternalOrderResponse" class="com.sellinall.lazada.response.ProcessExternalOrderResponse" />
 	
 	<bean id="getAccessToken" class="com.sellinall.lazada.requests.GetAccessToken" />
-	<bean id="refreshAccessToken" class="com.sellinall.lazada.requests.RefreshAccessToken" />	
+	<bean id="refreshAccessToken" class="com.sellinall.lazada.requests.RefreshAccessToken" />
+	<bean id="buildOrderDetailsRequest" class="com.sellinall.lazada.requests.BuildOrderDetailsRequest" />
+	<bean id="submitOrderStatusToPackedRequest" class="com.sellinall.lazada.requests.SubmitOrderStatusToPackedRequest" />
+	<bean id="documentRequest" class="com.sellinall.lazada.requests.DocumentRequest" />
 
 	<bean id="environmentVariablesConfiguration" class="org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig">
 		<property name="algorithm" value="PBEWithMD5AndDES" />
@@ -121,6 +126,28 @@
 					<process ref="processListOrdersResponse" />
 				</when>
 			</loop>
+		</route>
+		
+		<route id="getOrderDetails">
+			<from uri="direct:getOrderDetails" />
+			<process ref="initGetOrderDetails" />
+			<process ref="userDBQuery" />
+			<process ref="initializeProcessOrders" />
+			<to uri="direct:getAccessToken" />
+			<process ref="buildOrderDetailsRequest" />
+		</route>
+		
+		<route id="getDocument">
+			<from uri="direct:getDocument" />
+			<process ref="initializeGetDocument" />
+			<process ref="userDBQuery" />
+			<process ref="initializeProcessOrders" />
+			<when>
+				<simple>${exchangeProperty.getAccessToken} == true</simple>
+				<to uri="direct:getAccessToken" />
+			</when>
+			<process ref="submitOrderStatusToPackedRequest" />
+			<process ref="documentRequest" />
 		</route>
 		
 	</camelContext>

@@ -25,22 +25,17 @@ public class DocumentRequest implements Processor {
 		HashMap<String, String> map = new HashMap<String, String>();
 		String documentType = exchange.getProperty("documentType", String.class);
 		String orderIDs = "";
-		if (exchange.getProperties().containsKey("shippingLabelOrderItemIds")) {
-			orderIDs = exchange.getProperty("shippingLabelOrderItemIds", String.class);
-		} else if (exchange.getProperties().containsKey("orderItemIDs")) {
-			orderIDs = exchange.getProperty("orderItemIDs", String.class);
-		} else if (exchange.getProperties().containsKey("orderItemID")) {
-			orderIDs = exchange.getProperty("orderItemID", String.class);
-		} else {
-			orderIDs = exchange.getProperty("orderIDs", String.class);
-		}
+
+		orderIDs = exchange.getProperty("orderItemIDs", String.class);
+
 		map.put("doc_type", documentType);
 		map.put("order_item_ids", orderIDs);
 		map.put("access_token", accessToken);
 		String queryParams = "&doc_type=" + documentType + "&order_item_ids=" + URLEncoder.encode(orderIDs, "UTF-8");
 		String clientID = Config.getConfig().getLazadaClientID();
 		String clientSecret = Config.getConfig().getLazadaClientSecret();
-		JSONObject response = callAPI(exchange, hostURL, accessToken, map, queryParams, clientID, clientSecret, retryCount);
+		JSONObject response = callAPI(exchange, hostURL, accessToken, map, queryParams, clientID, clientSecret,
+				retryCount);
 		exchange.getOut().setBody(response);
 	}
 
@@ -68,8 +63,7 @@ public class DocumentRequest implements Processor {
 				}
 				response.put("documents", documentList);
 				return response;
-			}
-			else {
+			} else {
 				log.error("Getting invalid response from order document api for accountNumber : "
 						+ exchange.getProperty("accountNumber") + ", nickNameID : " + exchange.getProperty("nickNameID")
 						+ ", retryCount : " + retryCount + " & response : " + serviceResponse + " & queryParams : "
@@ -77,7 +71,8 @@ public class DocumentRequest implements Processor {
 				if (retryCount <= maxRetryCount) {
 					retryCount++;
 					Thread.sleep(1000);
-					return callAPI(exchange, hostURL, accessToken, map, queryParams, clientID, clientSecret, retryCount);
+					return callAPI(exchange, hostURL, accessToken, map, queryParams, clientID, clientSecret,
+							retryCount);
 				}
 			}
 

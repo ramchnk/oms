@@ -22,7 +22,9 @@ public class UserDBQuery implements Processor {
 
 	public void process(Exchange exchange) throws Exception {
 		JSONObject inBody = exchange.getIn().getBody(JSONObject.class);
-		exchange.setProperty("from", inBody.getString("from"));
+		if(inBody.has("from")) {
+			exchange.setProperty("from", inBody.getString("from"));
+		}
 		DBObject outBody = getUserDetails(exchange);
 		exchange.getOut().setBody(outBody);
 		exchange.setProperty("UserDetails", outBody);

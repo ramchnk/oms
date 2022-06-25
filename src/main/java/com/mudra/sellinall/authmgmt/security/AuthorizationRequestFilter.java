@@ -5,7 +5,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.log4j.Logger;
 
-import com.mongodb.DBObject;
 import com.mudra.sellinall.config.Config;
 import com.sellinall.util.AuthConstant;
 import com.sun.jersey.core.header.InBoundHeaders;
@@ -44,6 +43,14 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter {
 		}
 		
 		if(arg0.getPath().contains("orders/lazada")) {
+			log.debug("No Need To authorize this url because it is from LAZADALISTING / health service ");
+			return arg0;
+		}
+		if(arg0.getPath().contains("orderitems/lazada")) {
+			log.debug("No Need To authorize this url because it is from LAZADALISTING / health service ");
+			return arg0;
+		}
+		if(arg0.getPath().contains("documents/lazada")) {
 			log.debug("No Need To authorize this url because it is from LAZADALISTING / health service ");
 			return arg0;
 		}

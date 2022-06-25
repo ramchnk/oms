@@ -29,7 +29,7 @@
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
       <a class="navbar-brand m-0" href=" https://demos.creative-tim.com/soft-ui-dashboard/pages/dashboard.html " target="_blank">
         <img src="../assets/img/logo-ct-dark.png" class="navbar-brand-img h-100" alt="main_logo">
-        <span class="ms-1 font-weight-bold">Soft UI Dashboard</span>
+        <span class="ms-1 font-weight-bold">OMS SG</span>
       </a>
     </div>
     <hr class="horizontal dark mt-0">
@@ -75,27 +75,6 @@
             <span class="nav-link-text ms-1">Orders</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link  " href="../pages/billing.html">
-            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
-              <svg width="12px" height="12px" viewBox="0 0 43 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-                <title>credit-card</title>
-                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                  <g transform="translate(-2169.000000, -745.000000)" fill="#FFFFFF" fill-rule="nonzero">
-                    <g transform="translate(1716.000000, 291.000000)">
-                      <g transform="translate(453.000000, 454.000000)">
-                        <path class="color-background opacity-6" d="M43,10.7482083 L43,3.58333333 C43,1.60354167 41.3964583,0 39.4166667,0 L3.58333333,0 C1.60354167,0 0,1.60354167 0,3.58333333 L0,10.7482083 L43,10.7482083 Z"></path>
-                        <path class="color-background" d="M0,16.125 L0,32.25 C0,34.2297917 1.60354167,35.8333333 3.58333333,35.8333333 L39.4166667,35.8333333 C41.3964583,35.8333333 43,34.2297917 43,32.25 L43,16.125 L0,16.125 Z M19.7083333,26.875 L7.16666667,26.875 L7.16666667,23.2916667 L19.7083333,23.2916667 L19.7083333,26.875 Z M35.8333333,26.875 L28.6666667,26.875 L28.6666667,23.2916667 L35.8333333,23.2916667 L35.8333333,26.875 Z"></path>
-                      </g>
-                    </g>
-                  </g>
-                </g>
-              </svg>
-            </div>
-            <span class="nav-link-text ms-1">Billing</span>
-          </a>
-        </li>
-       
       </ul>
     </div>
     
@@ -154,7 +133,7 @@
                    <span class="glyphicon glyphicon-calendar"></span>
                    </span>
                    <div class="col-4 text-end">
-                      <button class="btn btn-outline-primary btn-sm mb-0" onclick="loadOrders()">Get Orders</button>
+                      <button class="btn btn-outline-primary btn-sm mb-0" onclick="loadOrders()" id="loadOrdersBtn">Get Orders</button>
                    </div>
                 </div>
              </div>
@@ -176,7 +155,9 @@
                   <thead>
                     <tr>
                       <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Order Number</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Quantity</th>
                       <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Amount</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Shipping Amount</th>
                       <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
                       <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Created Time</th>
                       <th class="text-secondary opacity-7"></th>
@@ -188,6 +169,26 @@
                 </table>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="orderItemsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="orderItemsModalTitle">Modal title</h5>
+            <button type="button" class="btn-close text-dark" data-bs-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="orderItemsModalBody">
+            ...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn bg-gradient-primary" onclick="printShippingLabel()">Print Shipping Label</button>
           </div>
         </div>
       </div>
@@ -254,6 +255,7 @@
   <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
   <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
   <script>
+    var orderItemID = "";
     var win = navigator.platform.indexOf('Win') > -1;
     if (win && document.querySelector('#sidenav-scrollbar')) {
       var options = {
@@ -262,10 +264,60 @@
       Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
     }
 
+    function printShippingLabel(){
+      console.log(orderItemID);
+    }
+
+    function showOrderItems(orderID){
+        orderItemID = "";
+        var exchangeRateCallBack = function (http) {
+          $("#orderItemsModalTitle").html("<b>"+orderID+"</b>");
+          var response = JSON.parse(http.responseText);
+          var data = response.data;
+          var table ='<div class="table-responsive"><table><tbody>'+
+          '<tr><th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Title</th>'+
+          '<th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Quantity</th>'+
+          '<th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">SLA</th>'+
+          '</tr>';
+          for(var i in data){
+            orderItemID += data[i].order_item_id;
+            if(i!=data.length-1){
+              orderItemID +=",";
+            }
+            table  +='<tr>'+
+            '<td>'+
+            '<div class="d-flex px-2 py-1">'+
+            '<div>'+
+            '<img src="'+data[i].product_main_image+'" class="avatar avatar-sm me-3">'+
+            '</div>'+
+            '<div class="d-flex flex-column justify-content-center">'+
+            '<p class="mb-0 text-xs">'+data[i].name+'</p>'+
+            '<b class="text-xs text-secondary mb-0">'+data[i].sku+'</b>'+
+            '</div>'+
+            '</div>'+
+            '</td>'+
+            '<td>'+
+            '<p class="text-xs font-weight-bold mb-0">1</p>'+
+            '</td>'+
+            '<td class="align-middle text-center">'+
+            '<span class="text-secondary text-xs font-weight-bold">'+data[i].sla_time_stamp.split("T")[0]+'</span>'+
+            '</td>'+
+            '</tr>';
+          }
+            table  +='</tbody></table></div>';
+            $("#orderItemsModalBody").html(table);
+          $("#orderItemsModal").modal("show");
+        };
+        httpRequest("GET", 'orderitems/lazada?orderID=' + orderID, '', exchangeRateCallBack, 'adminserv');
+        
+    }
+
     function loadOrders(){
       var date = $("#orderDate").val();
+      $("#loadOrdersBtn").html('<span class="spinner-border" style="height: 17px;width: 17px;"></span>');
       console.log(date);
       var exchangeRateCallBack = function (http) {
+        $("#loadOrdersBtn").html('Get Orders');
         if (http.status == 200) {
             var response = JSON.parse(http.responseText);
             var orders = response.orders;
@@ -289,12 +341,19 @@
                   }
                   table += '<tr>'+
                             '<td>'+
-                            '<div class="d-flex px-2 py-1">'+
-                              '<div><b>'+orders[i].order_number+'</b></div>'+
+                            '<div class="d-flex flex-column justify-content-center">'+
+                              '<b><a class="mb-0 text-sm" onClick="showOrderItems('+orders[i].order_id+')">'+orders[i].order_number+'</a></b>'+
+                              '<p class="text-xs text-secondary mb-0">'+orders[i].address_billing.first_name+'</p>'+
                               '</div>'+
                               '</td>'+
                               '<td>'+
+                              '<p class="text-xs font-weight-bold mb-0">'+orders[i].items_count+'</p>'+
+                              '</td>'+
+                              '<td>'+
                               '<p class="text-xs font-weight-bold mb-0">'+orders[i].price+'</p>'+
+                              '</td>'+
+                              '<td>'+
+                              '<p class="text-xs font-weight-bold mb-0">'+orders[i].shipping_fee_original+'</p>'+
                               '</td>'+
                               '<td class="align-middle text-center text-sm">'+
                               '<span class="badge badge-sm bg-gradient-'+statusColor+'">'+orders[i].statuses[0]+'</span>'+
@@ -316,8 +375,9 @@
         var http = new XMLHttpRequest();
         console.log(payLoad);
         
-        var hostname = "https://oms-sg.herokuapp.com/services/" + uri;
+      //  var hostname = "https://oms-sg.herokuapp.com/services/" + uri;
         
+        var hostname = "http://localhost:8081/services/" + uri;
 
         http.open(method, hostname, true);
         
