@@ -5,6 +5,7 @@
 	<link rel="stylesheet" type="text/css" href="css/style.css">
 	<link href="https://fonts.googleapis.com/css?family=Poppins:600&display=swap" rel="stylesheet">
 	<script src="https://kit.fontawesome.com/a81368914c.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -22,8 +23,7 @@
            		   		<i class="fas fa-user"></i>
            		   </div>
            		   <div class="div">
-           		   		<h5>Username</h5>
-           		   		<input type="text" class="input">
+           		   		<input type="text" class="input" id="userName" placeholder="Username">
            		   </div>
            		</div>
            		<div class="input-div pass">
@@ -31,14 +31,58 @@
            		    	<i class="fas fa-lock"></i>
            		   </div>
            		   <div class="div">
-           		    	<h5>Password</h5>
-           		    	<input type="password" class="input">
+           		    	<input type="password" class="input" id="password" placeholder="Password">
             	   </div>
             	</div>
             	<a href="#">Forgot Password?</a>
-            	<a href="./dashboard/pages/dashboard.html"><input type="button" class="btn" value="Login"></a>
+            	<input type="button" class="btn" value="Login" onclick="login()">
+            	<div style="display:none;" id="loginFailure">
+            		<span style="color:red;">Login faulire</span>
+            		
+            	</div>
             </form>
         </div>
     </div>
+    <script type="text/javascript">
+    	function login(){
+    		var request ={
+    			"userID" : $("#userName").val(),
+    			"password": $("#password").val()
+    		};
+    		var exchangeRateCallBack = function (http) {
+    			console.log("success");
+    			window.location.replace("./dashboard/pages/dashboard.html");
+    		};
+    		httpRequest("POST", 'login', JSON.stringify(request), exchangeRateCallBack, 'adminserv');
+    	}
+
+    	function httpRequest(method, uri, payLoad, callBackFunction, accountNumber) {
+        var http = new XMLHttpRequest();
+        console.log(payLoad);
+        
+      //  var hostname = "https://oms-sg.herokuapp.com/services/" + uri;
+        
+        var hostname = "http://localhost:8081/services/" + uri;
+
+        http.open(method, hostname, true);
+        
+        http.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+        if (accountNumber != undefined && accountNumber !="") {
+        // http.setRequestHeader('accountNumber', accountNumber);
+        }
+        
+        http.onreadystatechange = function() {
+            if (http.readyState == 4 && (http.status == 202)) {
+                callBackFunction(http);
+            } else if(http.status == 403){
+                console.log("forbiden");
+            } else if (http.readyState == 4 && http.status == 401) {
+               console.log("failure");
+               $("#loginFailure").css("display", "block");
+            }
+        };
+        http.send(payLoad);
+    }
+    </script>
 </body>
 </html>

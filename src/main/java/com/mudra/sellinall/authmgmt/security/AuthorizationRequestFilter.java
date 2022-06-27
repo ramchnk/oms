@@ -11,15 +11,9 @@ import com.sun.jersey.core.header.InBoundHeaders;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
-/**
- *  * Allow the system to serve xhr level 2 from all cross domain site  *  * @author
- * Vikraman (LGPLv3)  * @version 0.1  
- */
 public class AuthorizationRequestFilter implements ContainerRequestFilter {
 	static Logger log = Logger.getLogger(AuthorizationRequestFilter.class
 			.getName());
-
-	// private AuthorizationLifeCycle authLifeCycle;
 
 	public ContainerRequest filter(ContainerRequest arg0)
 			throws WebApplicationException {
@@ -33,6 +27,10 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter {
 			return arg0;
 		}
 		if(arg0.getPath().contains("health")) {
+			log.debug("No Need To authorize this url because it is from LAZADALISTING / health service ");
+			return arg0;
+		}
+		if(arg0.getPath().contains("login")) {
 			log.debug("No Need To authorize this url because it is from LAZADALISTING / health service ");
 			return arg0;
 		}
